@@ -45,6 +45,8 @@ class App:
             st.write("### DataFrame'in gereksiz satirlarini sildikten sonra son 10 satiri")
             st.table(data.tail(10))
             data['diagnosis'].replace({'M': 1, 'B': 0}, inplace=True)
+            self.y = data['diagnosis']
+            self.X = data.drop('diagnosis', axis=1)
             fig = self.create_correlation_matrix(data)
             st.write("### Korelasyon Matrisi Çizimi")
             st.pyplot(fig)
@@ -52,8 +54,6 @@ class App:
     def create_correlation_matrix(self, data):
         malignant_data = data[data['diagnosis'] == 1]
         benign_data = data[data['diagnosis'] == 0]
-        self.y = data['diagnosis']
-        self.X = data.drop('diagnosis', axis=1)
         fig, ax = plt.subplots()
         sns.scatterplot(data=malignant_data, x='radius_mean', y='texture_mean', color='red', label='kotu',
                         ax=ax, alpha=0.4)
