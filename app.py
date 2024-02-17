@@ -45,7 +45,7 @@ class App:
             st.write(data.columns.tolist())
             data = data.drop(['id', 'Unnamed: 32'], axis=1)
             st.write("# Görev 2")
-            st.write("### DataFrame'in gereksiz satirlarini sildikten sonra son 10 satiri")
+            st.write("### DataFrame'in gereksiz sütunlarını sildikten sonra son 10 satiri")
             st.table(data.tail(10))
             data['diagnosis'].replace({'M': 1, 'B': 0}, inplace=True)
             self.y = data['diagnosis']
