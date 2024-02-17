@@ -9,6 +9,7 @@ from sklearn.neighbors import KNeighborsClassifier
 from sklearn.naive_bayes import MultinomialNB
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, confusion_matrix
 
+
 class App:
     def __init__(self):
         self.dataset_name: None
@@ -22,12 +23,13 @@ class App:
         st.title("YZUP-Cezeri-Baykar-Proje")
         self.dataset_name = st.sidebar.selectbox(
             'Select Dataset',
-            ('Breast Cancer', )
+            ('Breast Cancer',)
         )
         self.classifier_name = st.sidebar.selectbox(
             'Select Classifier',
             ("KNN", "SVM", "Naive Bayes")
         )
+
     def run(self):
         self.get_dataset()
         self.generate()
@@ -58,24 +60,28 @@ class App:
         fig, ax = plt.subplots()
         sns.scatterplot(data=malignant_data, x='radius_mean', y='texture_mean', color='red', label='kotu',
                         ax=ax, alpha=0.4)
-        sns.scatterplot(data=benign_data, x='radius_mean', y='texture_mean', color='green', label='iyi', ax=ax, alpha=0.4)
+        sns.scatterplot(data=benign_data, x='radius_mean', y='texture_mean', color='green', label='iyi', ax=ax,
+                        alpha=0.4)
         ax.legend()
         return fig
+
     def get_classifier(self):
         if self.classifier_name == 'SVM':
             svm = SVC()
             param_grid = {'C': [0.1, 1, 10, 100, 1000],
                           'gamma': [1, 0.1, 0.01, 0.001, 0.0001],
                           'kernel': ['rbf']}
-            self.clf = GridSearchCV(svm, param_grid,  refit= True, verbose= 0)
+            self.clf = GridSearchCV(svm, param_grid, refit=True, verbose=0)
         elif self.classifier_name == 'KNN':
             knn = KNeighborsClassifier()
-            param_grid = {'n_neighbors': np.arange(1, 10), 'weights': ['uniform', 'distance'], 'metric': ['euclidean', 'manhattan']}
+            param_grid = {'n_neighbors': np.arange(1, 10), 'weights': ['uniform', 'distance'],
+                          'metric': ['euclidean', 'manhattan']}
             self.clf = GridSearchCV(knn, param_grid, cv=5)
         else:
             mnb = MultinomialNB()
             param_grid = {'alpha': [0.1, 0.5, 1.0, 2.0, 5.0]}
             self.clf = GridSearchCV(mnb, param_grid, cv=5)
+
     def generate(self):
         self.get_classifier()
         X_train, X_test, y_train, y_test = train_test_split(self.X, self.y, test_size=0.2, random_state=1234)
@@ -102,5 +108,3 @@ class App:
         plt.xlabel("y_pred")
         plt.ylabel("y_true")
         return f
-
-
