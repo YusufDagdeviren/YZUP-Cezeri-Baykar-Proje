@@ -4,12 +4,12 @@ import seaborn as sns
 import numpy as np
 import matplotlib.pyplot as plt
 from sklearn import datasets
-from sklearn.model_selection import train_test_split
+from sklearn.model_selection import train_test_split, GridSearchCV
 from sklearn.decomposition import PCA
 from sklearn.svm import SVC
 from sklearn.neighbors import KNeighborsClassifier
-from sklearn.ensemble import RandomForestClassifier
-from sklearn.metrics import accuracy_score
+from sklearn.naive_bayes import MultinomialNB
+from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, confusion_matrix
 
 class App:
     def __init__(self):
@@ -26,9 +26,12 @@ class App:
             'Select Dataset',
             ('Breast Cancer', )
         )
+        self.classifier_name = st.sidebar.selectbox(
+            'Select Classifier',
+            ("KNN", "SVM", "Naive Bayes")
+        )
     def run(self):
         self.get_dataset()
-        # self.add_parameter_ui()
         self.generate()
 
     def get_dataset(self):
@@ -61,8 +64,45 @@ class App:
         ax.legend()
         return fig
     def get_classifier(self):
-        pass
+        if self.classifier_name == 'SVM':
+            svm = SVC()
+            param_grid = {'C': [0.1, 1, 10, 100, 1000],
+                          'gamma': [1, 0.1, 0.01, 0.001, 0.0001],
+                          'kernel': ['rbf']}
+            self.clf = GridSearchCV(svm, param_grid,  refit= True, verbose= 0)
+        elif self.classifier_name == 'KNN':
+            knn = KNeighborsClassifier()
+            param_grid = {'n_neighbors': np.arange(1, 10), 'weights': ['uniform', 'distance'], 'metric': ['euclidean', 'manhattan']}
+            self.clf = GridSearchCV(knn, param_grid, cv=5)
+        else:
+            mnb = MultinomialNB()
+            param_grid = {'alpha': [0.1, 0.5, 1.0, 2.0, 5.0]}
+            self.clf = GridSearchCV(mnb, param_grid, cv=5)
     def generate(self):
         self.get_classifier()
         X_train, X_test, y_train, y_test = train_test_split(self.X, self.y, test_size=0.2, random_state=1234)
+        self.clf.fit(X_train, y_train)
+        y_predict = self.clf.predict(X_test)
+        accuracy = accuracy_score(y_test, y_predict)
+        precision = precision_score(y_test, y_predict)
+        recall = recall_score(y_test, y_predict)
+        f1 = f1_score(y_test, y_predict)
+        st.write(f"# Görev 4")
+        st.write(f"Classifier = {self.classifier_name}")
+        st.write(f"Model Accuracy: {accuracy}")
+        st.write(f" Model Precision: {precision}")
+        st.write(f" Model Recall: {recall}")
+        st.write(f" Model F1 Score: {f1}")
+        st.write("### Confusion Matrix")
+        f = self.create_confusion_matrix(y_predict, y_test)
+        st.pyplot(f)
+
+    def create_confusion_matrix(self, y_predict, y_test):
+        cm = confusion_matrix(y_test, y_predict)
+        f, ax = plt.subplots(figsize=(5, 5))
+        sns.heatmap(cm, annot=True, linewidths=0.5, linecolor="red", fmt=".0f", ax=ax)
+        plt.xlabel("y_pred")
+        plt.ylabel("y_true")
+        return f
+
 
