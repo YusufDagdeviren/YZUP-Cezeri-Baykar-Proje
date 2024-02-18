@@ -15,17 +15,13 @@ class App:
     def __init__(self):
         self.dataset_name: None
         self.classifier_name: None
-        self.Init_Streamlit_page()
         self.params = dict()
+        self.uploaded_file = None
         self.clf = None
         self.X, self.y = None, None
-
+        self.Init_Streamlit_page()
     def Init_Streamlit_page(self):
         st.title("YZUP-Cezeri-Baykar-Proje")
-        self.dataset_name = st.sidebar.selectbox(
-            'Select Dataset',
-            ('Breast Cancer',)
-        )
         self.classifier_name = st.sidebar.selectbox(
             'Select Classifier',
             ("KNN", "SVM", "Naive Bayes")
@@ -36,9 +32,13 @@ class App:
         self.generate()
 
     def get_dataset(self):
-        data = None
-        if self.dataset_name == 'Breast Cancer':
-            data = pd.read_csv("data.csv")
+        self.uploaded_file = st.file_uploader("Upload Breast Cancer CSV file", type=["csv"])
+        if self.uploaded_file is not None:
+            data = pd.read_csv(self.uploaded_file)
+            self.dataset_name = st.sidebar.selectbox(
+                'Select Dataset',
+                (self.uploaded_file.name,)
+            )
             st.write("# Görev 1")
             st.write("### DataFrame'in ilk 10 satiri")
             st.table(data.head(10))
@@ -64,27 +64,25 @@ class App:
             fig = self.create_correlation_matrix(data)
             st.write("### Korelasyon Matrisi Çizimi")
             st.pyplot(fig)
-
-    def create_bar_graph(self):
-        df_graph = pd.DataFrame({
-            "Siniflar": self.y.value_counts().index,
-            "Sinifların Miktarı": self.y.value_counts().values
-        })
-        fig, ax = plt.subplots()
-        sns.barplot(data=df_graph, x="Siniflar", y="Sinifların Miktarı")
-        return fig
-
-    def create_correlation_matrix(self, data):
-        malignant_data = data[data['diagnosis'] == 1]
-        benign_data = data[data['diagnosis'] == 0]
-        fig, ax = plt.subplots()
-        sns.scatterplot(data=malignant_data, x='radius_mean', y='texture_mean', color='red', label='kotu',
-                        ax=ax, alpha=0.4)
-        sns.scatterplot(data=benign_data, x='radius_mean', y='texture_mean', color='green', label='iyi', ax=ax,
-                        alpha=0.4)
-        ax.legend()
-        return fig
-
+    def generate(self):
+        if self.uploaded_file is not None:
+            self.get_classifier()
+            X_train, X_test, y_train, y_test = train_test_split(self.X, self.y, test_size=0.2, random_state=1234)
+            self.clf.fit(X_train, y_train)
+            y_predict = self.clf.predict(X_test)
+            accuracy = accuracy_score(y_test, y_predict)
+            precision = precision_score(y_test, y_predict)
+            recall = recall_score(y_test, y_predict)
+            f1 = f1_score(y_test, y_predict)
+            st.write(f"# Görev 4")
+            st.write(f"Classifier = {self.classifier_name}")
+            st.write(f"Model Accuracy: {accuracy}")
+            st.write(f" Model Precision: {precision}")
+            st.write(f" Model Recall: {recall}")
+            st.write(f" Model F1 Score: {f1}")
+            st.write("### Confusion Matrix")
+            f = self.create_confusion_matrix(y_predict, y_test)
+            st.pyplot(f)
     def get_classifier(self):
         if self.classifier_name == 'SVM':
             svm = SVC()
@@ -103,24 +101,7 @@ class App:
             mnb = MultinomialNB()
             self.clf = mnb
 
-    def generate(self):
-        self.get_classifier()
-        X_train, X_test, y_train, y_test = train_test_split(self.X, self.y, test_size=0.2, random_state=1234)
-        self.clf.fit(X_train, y_train)
-        y_predict = self.clf.predict(X_test)
-        accuracy = accuracy_score(y_test, y_predict)
-        precision = precision_score(y_test, y_predict)
-        recall = recall_score(y_test, y_predict)
-        f1 = f1_score(y_test, y_predict)
-        st.write(f"# Görev 4")
-        st.write(f"Classifier = {self.classifier_name}")
-        st.write(f"Model Accuracy: {accuracy}")
-        st.write(f" Model Precision: {precision}")
-        st.write(f" Model Recall: {recall}")
-        st.write(f" Model F1 Score: {f1}")
-        st.write("### Confusion Matrix")
-        f = self.create_confusion_matrix(y_predict, y_test)
-        st.pyplot(f)
+
 
     def create_confusion_matrix(self, y_predict, y_test):
         cm = confusion_matrix(y_test, y_predict)
@@ -129,3 +110,21 @@ class App:
         plt.xlabel("y_pred")
         plt.ylabel("y_true")
         return f
+    def create_correlation_matrix(self, data):
+        malignant_data = data[data['diagnosis'] == 1]
+        benign_data = data[data['diagnosis'] == 0]
+        fig, ax = plt.subplots()
+        sns.scatterplot(data=malignant_data, x='radius_mean', y='texture_mean', color='red', label='kotu',
+                        ax=ax, alpha=0.4)
+        sns.scatterplot(data=benign_data, x='radius_mean', y='texture_mean', color='green', label='iyi', ax=ax,
+                        alpha=0.4)
+        ax.legend()
+        return fig
+    def create_bar_graph(self):
+        df_graph = pd.DataFrame({
+            "Siniflar": self.y.value_counts().index,
+            "Sinifların Miktarı": self.y.value_counts().values
+        })
+        fig, ax = plt.subplots()
+        sns.barplot(data=df_graph, x="Siniflar", y="Sinifların Miktarı")
+        return fig
