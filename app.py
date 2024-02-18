@@ -8,6 +8,7 @@ from sklearn.svm import SVC
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.naive_bayes import MultinomialNB
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, confusion_matrix
+from imblearn.over_sampling import RandomOverSampler
 
 
 class App:
@@ -50,9 +51,28 @@ class App:
             data['diagnosis'].replace({'M': 1, 'B': 0}, inplace=True)
             self.y = data['diagnosis']
             self.X = data.drop('diagnosis', axis=1)
+            # Verisetinde imbalanced classification var sınıfları dengelemek için veri ürettim
+            st.write("### Aşağıda görüldüğü üzere verisetinde imbalanced classification problemi var.")
+            fig = self.create_bar_graph()
+            st.pyplot(fig)
+            sampler = RandomOverSampler()
+            self.X, self.y = sampler.fit_resample(self.X, self.y)
+            st.write("### Verisetindeki imbalanced classification problemini OverSampler ile çözdükten sonra.")
+            fig = self.create_bar_graph()
+            st.pyplot(fig)
+
             fig = self.create_correlation_matrix(data)
             st.write("### Korelasyon Matrisi Çizimi")
             st.pyplot(fig)
+
+    def create_bar_graph(self):
+        df_graph = pd.DataFrame({
+            "Siniflar": self.y.value_counts().index,
+            "Sinifların Miktarı": self.y.value_counts().values
+        })
+        fig, ax = plt.subplots()
+        sns.barplot(data=df_graph, x="Siniflar", y="Sinifların Miktarı")
+        return fig
 
     def create_correlation_matrix(self, data):
         malignant_data = data[data['diagnosis'] == 1]
@@ -72,15 +92,16 @@ class App:
                           'gamma': [1, 0.1, 0.01, 0.001, 0.0001],
                           'kernel': ['rbf']}
             self.clf = GridSearchCV(svm, param_grid, refit=True, verbose=0)
+            self.X = (self.X - self.X.min()) / (self.X.max() - self.X.min())
         elif self.classifier_name == 'KNN':
             knn = KNeighborsClassifier()
             param_grid = {'n_neighbors': np.arange(1, 10), 'weights': ['uniform', 'distance'],
                           'metric': ['euclidean', 'manhattan']}
             self.clf = GridSearchCV(knn, param_grid, cv=5)
+            self.X = (self.X - self.X.min()) / (self.X.max() - self.X.min())
         else:
             mnb = MultinomialNB()
-            param_grid = {'alpha': [0.1, 0.5, 1.0, 2.0, 5.0]}
-            self.clf = GridSearchCV(mnb, param_grid, cv=5)
+            self.clf = mnb
 
     def generate(self):
         self.get_classifier()
