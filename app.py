@@ -20,6 +20,7 @@ class App:
         self.clf = None
         self.X, self.y = None, None
         self.Init_Streamlit_page()
+
     def Init_Streamlit_page(self):
         st.title("YZUP-Cezeri-Baykar-Proje")
         self.classifier_name = st.sidebar.selectbox(
@@ -64,6 +65,7 @@ class App:
             fig = self.create_correlation_matrix(data)
             st.write("### Korelasyon Matrisi Çizimi")
             st.pyplot(fig)
+
     def generate(self):
         if self.uploaded_file is not None:
             self.get_classifier()
@@ -83,6 +85,7 @@ class App:
             st.write("### Confusion Matrix")
             f = self.create_confusion_matrix(y_predict, y_test)
             st.pyplot(f)
+
     def get_classifier(self):
         if self.classifier_name == 'SVM':
             svm = SVC()
@@ -109,8 +112,6 @@ class App:
             mnb = MultinomialNB()
             self.clf = mnb
 
-
-
     def create_confusion_matrix(self, y_predict, y_test):
         cm = confusion_matrix(y_test, y_predict)
         f, ax = plt.subplots(figsize=(5, 5))
@@ -118,6 +119,7 @@ class App:
         plt.xlabel("y_pred")
         plt.ylabel("y_true")
         return f
+
     def create_correlation_matrix(self, data):
         malignant_data = data[data['diagnosis'] == 1]
         benign_data = data[data['diagnosis'] == 0]
@@ -128,6 +130,7 @@ class App:
                         alpha=0.4)
         ax.legend()
         return fig
+
     def create_bar_graph(self):
         df_graph = pd.DataFrame({
             "Siniflar": self.y.value_counts().index,
