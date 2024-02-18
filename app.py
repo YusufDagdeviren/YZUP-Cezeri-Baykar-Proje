@@ -90,13 +90,21 @@ class App:
                           'gamma': [1, 0.1, 0.01, 0.001, 0.0001],
                           'kernel': ['rbf']}
             self.clf = GridSearchCV(svm, param_grid, refit=True, verbose=0)
+            st.write("### Veri normalizasyonundan önce X değişkenleri")
+            st.table(self.X.head(5))
             self.X = (self.X - self.X.min()) / (self.X.max() - self.X.min())
+            st.write("### Veri normalizasyonundan sonra X değişkenleri")
+            st.table(self.X.head(5))
         elif self.classifier_name == 'KNN':
             knn = KNeighborsClassifier()
             param_grid = {'n_neighbors': np.arange(1, 10), 'weights': ['uniform', 'distance'],
                           'metric': ['euclidean', 'manhattan']}
             self.clf = GridSearchCV(knn, param_grid, cv=5)
+            st.write("### Veri normalizasyonunda önce X değişkenleri")
+            st.table(self.X.head(5))
             self.X = (self.X - self.X.min()) / (self.X.max() - self.X.min())
+            st.write("### Veri normalizasyonundan sonra X değişkenleri")
+            st.table(self.X.head(5))
         else:
             mnb = MultinomialNB()
             self.clf = mnb
